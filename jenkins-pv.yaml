@@ -2,6 +2,7 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: jenkins-pv
+  namespace: jenkins
   labels:
     type: local
 spec:
@@ -11,4 +12,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/c/tmp/jenkins_home"
+    path: "/m/Docker/Volumes/jenkins-master/jenkins_home"

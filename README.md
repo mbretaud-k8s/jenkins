@@ -1,8 +1,65 @@
+# Namespace
+
+## Create the yaml file
+```
+$ cat jenkins-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jenkins
+  labels:
+    name: production
+```
+
+## Deploy the creation of the Namespace
+```
+$ kubectl create -f jenkins-namespace.yaml
+namespace/jenkins created
+```
+
+## Display the list of the Namespaces with the labels
+```
+$ kubectl get namespaces --show-labels
+NAME              STATUS   AGE     LABELS
+default           Active   29h     <none>
+docker            Active   29h     <none>
+jenkins           Active   2m55s   name=production
+kube-node-lease   Active   29h     <none>
+kube-public       Active   29h     <none>
+kube-system       Active   29h     <none>
+```
+
+## Display the description of the Namespace
+```
+$ kubectl describe namespaces jenkins
+Name:         jenkins
+Labels:       name=production
+Annotations:  Status:  Active
+
+No resource quota.
+
+No LimitRange resource.
+```
+
+## Change the Namespace
+```
+$ kubectl config set-context $(kubectl config current-context) --namespace=jenkins
+Context "docker-desktop" modified.
+```
+
+## Display the current Namespace
+```
+$ kubectl config get-contexts
+CURRENT   NAME                 CLUSTER          AUTHINFO         NAMESPACE
+*         docker-desktop       docker-desktop   docker-desktop   jenkins
+          docker-for-desktop   docker-desktop   docker-desktop
+```
+
 # PersistentVolume
 
 ## Create the directory of the volume
 ```
-$ mkdir /c/tmp/jenkins_home
+$ mkdir /m/Docker/Volumes/jenkins-master/jenkins_home
 ```
 
 ## Create the yaml file
@@ -12,6 +69,7 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: jenkins-pv
+  namespace: jenkins
   labels:
     type: local
 spec:
@@ -21,7 +79,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/c/tmp/jenkins_home"
+    path: "/m/Docker/Volumes/jenkins-master/jenkins_home"
 ```
 
 ## Deploy the creation of the PersistentVolume
@@ -42,11 +100,11 @@ jenkins-pv   10Gi       RWO            Retain           Available           jenk
 $ kubectl describe pv jenkins-pv
 Name:            jenkins-pv
 Labels:          type=local
-Annotations:     pv.kubernetes.io/bound-by-controller: yes
+Annotations:     <none>
 Finalizers:      [kubernetes.io/pv-protection]
 StorageClass:    jenkins
-Status:          Bound
-Claim:           default/jenkins-pvc
+Status:          Available
+Claim:
 Reclaim Policy:  Retain
 Access Modes:    RWO
 VolumeMode:      Filesystem
@@ -55,7 +113,7 @@ Node Affinity:   <none>
 Message:
 Source:
     Type:          HostPath (bare host directory volume)
-    Path:          /c/tmp/jenkins_home
+    Path:          /m/Docker/Volumes/jenkins-master/jenkins_home
     HostPathType:
 Events:            <none>
 ```
@@ -69,6 +127,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: jenkins-pvc
+  namespace: jenkins
   labels:
     type: local
 spec:
@@ -97,7 +156,7 @@ jenkins-pvc   Bound    jenkins-pv   10Gi       RWO            jenkins        10s
 ```
 $ kubectl describe pvc jenkins-pvc
 Name:          jenkins-pvc
-Namespace:     default
+Namespace:     jenkins
 StorageClass:  jenkins
 Status:        Bound
 Volume:        jenkins-pv
@@ -108,7 +167,7 @@ Finalizers:    [kubernetes.io/pvc-protection]
 Capacity:      10Gi
 Access Modes:  RWO
 VolumeMode:    Filesystem
-Mounted By:    jenkins-667f6b75c9-zhrds
+Mounted By:    <none>
 Events:        <none>
 ```
 
@@ -121,6 +180,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: jenkins
+  namespace: jenkins
 spec:
   replicas: 1
   template:
@@ -151,14 +211,14 @@ spec:
 ## Deploy the creation of the pods
 ```
 $ kubectl create -f jenkins-deployment.yaml
-pod/jenkins-master-pod created
+deployment.extensions/jenkins created
 ```
 
 ## Display the list of pods
 ```
 $ kubectl get pods
-NAME                 READY   STATUS             RESTARTS   AGE
-jenkins-master-pod   0/1     CrashLoopBackOff   1          16s
+NAME                       READY   STATUS    RESTARTS   AGE
+jenkins-667f6b75c9-zndns   1/1     Running   0          17s
 ```
 
 ## Display the list of deployments
@@ -172,8 +232,8 @@ jenkins   1/1     1            1           14m
 ```
 $ kubectl describe deployments jenkins
 Name:                   jenkins
-Namespace:              default
-CreationTimestamp:      Tue, 05 May 2020 17:05:45 +0200
+Namespace:              jenkins
+CreationTimestamp:      Wed, 06 May 2020 17:42:26 +0200
 Labels:                 app=jenkins
 Annotations:            deployment.kubernetes.io/revision: 1
 Selector:               app=jenkins
@@ -206,7 +266,7 @@ NewReplicaSet:   jenkins-667f6b75c9 (1/1 replicas created)
 Events:
   Type    Reason             Age   From                   Message
   ----    ------             ----  ----                   -------
-  Normal  ScalingReplicaSet  14m   deployment-controller  Scaled up replica set jenkins-667f6b75c9 to 1
+  Normal  ScalingReplicaSet  38s   deployment-controller  Scaled up replica set jenkins-667f6b75c9 to 1
 ```
 
 # Service
@@ -218,6 +278,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jenkins
+  namespace: jenkins
 spec:
   type: NodePort
   ports:
@@ -236,23 +297,22 @@ service/jenkins created
 ## Display the Service
 ```
 $ kubectl get service
-NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-jenkins      NodePort    10.99.186.160   <none>        8080:30032/TCP   2m37s
-kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP          6h6m
+NAME      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+jenkins   NodePort   10.100.111.51   <none>        8080:31846/TCP   5s
 ```
 
 # Execution
 
 ## Enter into the pod
 ```
-$ kubectl exec jenkins-667f6b75c9-zhrds -i -t -- /bin/sh
+$ kubectl exec jenkins-667f6b75c9-zndns -i -t -- /bin/sh
 / $ printenv
 JENKINS_HOME=/var/jenkins_home
 KUBERNETES_PORT=tcp://10.96.0.1:443
 KUBERNETES_SERVICE_PORT=443
 JENKINS_UC_EXPERIMENTAL=https://updates.jenkins.io/experimental
 JAVA_ALPINE_VERSION=8.121.13-r0
-HOSTNAME=jenkins-667f6b75c9-zhrds
+HOSTNAME=jenkins-667f6b75c9-zndns
 SHLVL=1
 HOME=/var/jenkins_home
 JENKINS_UC=https://updates.jenkins.io
@@ -280,35 +340,35 @@ $
 
 ## Display the description of the Pod
 ```
-$ kubectl describe pod jenkins-667f6b75c9-zhrds
-Name:           jenkins-667f6b75c9-zhrds
-Namespace:      default
+$ kubectl describe pod jenkins-667f6b75c9-zndns
+Name:           jenkins-667f6b75c9-zndns
+Namespace:      jenkins
 Priority:       0
 Node:           docker-desktop/192.168.65.3
-Start Time:     Tue, 05 May 2020 17:05:46 +0200
+Start Time:     Wed, 06 May 2020 17:42:26 +0200
 Labels:         app=jenkins
                 pod-template-hash=667f6b75c9
 Annotations:    <none>
 Status:         Running
-IP:             10.1.0.111
+IP:             10.1.0.150
 IPs:            <none>
 Controlled By:  ReplicaSet/jenkins-667f6b75c9
 Containers:
   jenkins-master-container:
-    Container ID:   docker://4ba03c51f66f79c3b924d5e05ee80277bb4e88864540392af572812e4bf4be83
+    Container ID:   docker://d587a8ced06313176c536465e36d554b9daf18673d2f298122cc865e479c63c8
     Image:          jenkins-master:2.233
     Image ID:       docker://sha256:0d236ff4260e0eab8c67e7c7f62088d93ef9963039fb6e69c0edf8325fc09d5c
     Ports:          8080/TCP, 50000/TCP
     Host Ports:     0/TCP, 0/TCP
     State:          Running
-      Started:      Tue, 05 May 2020 17:05:47 +0200
+      Started:      Wed, 06 May 2020 17:42:27 +0200
     Ready:          True
     Restart Count:  0
     Environment:
       JAVA_OPTS:  -Djenkins.install.runSetupWizard=false
     Mounts:
       /var/jenkins_home from jenkins-home (rw)
-      /var/run/secrets/kubernetes.io/serviceaccount from default-token-h6dzm (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-dmhng (ro)
 Conditions:
   Type              Status
   Initialized       True
@@ -320,21 +380,21 @@ Volumes:
     Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
     ClaimName:  jenkins-pvc
     ReadOnly:   false
-  default-token-h6dzm:
+  default-token-dmhng:
     Type:        Secret (a volume populated by a Secret)
-    SecretName:  default-token-h6dzm
+    SecretName:  default-token-dmhng
     Optional:    false
 QoS Class:       BestEffort
 Node-Selectors:  <none>
 Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
                  node.kubernetes.io/unreachable:NoExecute for 300s
 Events:
-  Type    Reason     Age   From                     Message
-  ----    ------     ----  ----                     -------
-  Normal  Scheduled  13m   default-scheduler        Successfully assigned default/jenkins-667f6b75c9-zhrds to docker-desktop
-  Normal  Pulled     13m   kubelet, docker-desktop  Container image "jenkins-master:2.233" already present on machine
-  Normal  Created    13m   kubelet, docker-desktop  Created container jenkins-master-container
-  Normal  Started    13m   kubelet, docker-desktop  Started container jenkins-master-container
+  Type    Reason     Age    From                     Message
+  ----    ------     ----   ----                     -------
+  Normal  Scheduled  2m22s  default-scheduler        Successfully assigned jenkins/jenkins-667f6b75c9-zndns to docker-desktop
+  Normal  Pulled     2m21s  kubelet, docker-desktop  Container image "jenkins-master:2.233" already present on machine
+  Normal  Created    2m21s  kubelet, docker-desktop  Created container jenkins-master-container
+  Normal  Started    2m21s  kubelet, docker-desktop  Started container jenkins-master-container
 ```
 
 # Replicasets
@@ -350,7 +410,7 @@ jenkins-667f6b75c9   1         1         1       15m
 ```
 $ kubectl describe replicasets jenkins-667f6b75c9
 Name:           jenkins-667f6b75c9
-Namespace:      default
+Namespace:      jenkins
 Selector:       app=jenkins,pod-template-hash=667f6b75c9
 Labels:         app=jenkins
                 pod-template-hash=667f6b75c9
@@ -378,9 +438,9 @@ Pod Template:
     ClaimName:  jenkins-pvc
     ReadOnly:   false
 Events:
-  Type    Reason            Age   From                   Message
-  ----    ------            ----  ----                   -------
-  Normal  SuccessfulCreate  16m   replicaset-controller  Created pod: jenkins-667f6b75c9-zhrds
+  Type    Reason            Age    From                   Message
+  ----    ------            ----   ----                   -------
+  Normal  SuccessfulCreate  2m52s  replicaset-controller  Created pod: jenkins-667f6b75c9-zndns
 ```
 
 # Expose ports
@@ -392,4 +452,3 @@ Forwarding from 127.0.0.1:8080 -> 8080
 Forwarding from [::1]:8080 -> 8080
 Handling connection for 8080
 ```
-
