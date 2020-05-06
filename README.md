@@ -273,7 +273,7 @@ Events:
 
 ## Create the yaml file
 ```
-$ cat jenkins-service.yaml
+$ cat jenkins-services.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -286,11 +286,26 @@ spec:
       targetPort: 8080
   selector:
     app: jenkins
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-jnlp
+  namespace: jenkins
+spec:
+  type: ClusterIP
+  ports:
+    - port: 50000
+      targetPort: 50000
+  selector:
+    app: jenkins
 ```
 
 ## Deploy the creation of the Service
 ```
-$ kubectl create -f jenkins-service.yaml
+$ kubectl create -f jenkins-services.yaml
 service/jenkins created
 ```
 
