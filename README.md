@@ -5,7 +5,7 @@
 $ mkdir /c/tmp/jenkins_home
 ```
 
-## Create the file "jenkins-pv.yaml"
+## Create the yaml file
 ```
 $ cat jenkins-pv.yaml
 kind: PersistentVolume
@@ -62,7 +62,7 @@ Events:            <none>
 
 # PersistentVolumeClaim
 
-## Create the file "jenkins-pvc.yaml"
+## Create the yaml file
 ```
 $ cat jenkins-pvc.yaml
 kind: PersistentVolumeClaim
@@ -114,7 +114,7 @@ Events:        <none>
 
 # Deployment
 
-## Create the file "jenkins-deployment.yaml"
+## Create the yaml file
 ```
 $ cat jenkins-deployment.yaml
 apiVersion: extensions/v1beta1
@@ -211,7 +211,7 @@ Events:
 
 # Service
 
-## Creation of the file "jenkins-service.yaml"
+## Create the yaml file
 ```
 $ cat jenkins-service.yaml
 apiVersion: v1
@@ -381,11 +381,6 @@ Events:
   Type    Reason            Age   From                   Message
   ----    ------            ----  ----                   -------
   Normal  SuccessfulCreate  16m   replicaset-controller  Created pod: jenkins-667f6b75c9-zhrds
-
-$ kubectl port-forward deployment/jenkins 8080:8080 &
-Forwarding from 127.0.0.1:8080 -> 8080
-Forwarding from [::1]:8080 -> 8080
-Handling connection for 8080
 ```
 
 # Expose ports
@@ -393,6 +388,8 @@ Handling connection for 8080
 ## Export the port of the Service
 ```
 $ kubectl port-forward service/jenkins 8080:8080 &
-
-
+Forwarding from 127.0.0.1:8080 -> 8080
+Forwarding from [::1]:8080 -> 8080
+Handling connection for 8080
+```
 
