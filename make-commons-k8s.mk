@@ -16,71 +16,105 @@ default:
 
 ###############################################
 #
-# PersistentVolume
+# Deploy
 #
 ###############################################
-create-pv:
-	kubectl create -f $(persistentVolumeFile)
+deploy:
+ifneq ($(persistentVolumeFile),)
+	kubectl create -f $(persistentVolumeFile) --save-config
+endif
+ifneq ($(persistentVolumeClaimFile),)
+	kubectl create -f $(persistentVolumeClaimFile) --save-config
+endif
+ifneq ($(deploymentFile),)
+	kubectl create -f $(deploymentFile) --save-config
+endif
+ifneq ($(serviceFile),)
+	kubectl create -f $(serviceFile) --save-config
+endif
 
-delete-pv:
+###############################################
+#
+# Apply
+#
+###############################################
+apply:
+ifneq ($(persistentVolumeFile),)
+	kubectl apply -f $(persistentVolumeFile) --save-config
+endif
+ifneq ($(persistentVolumeClaimFile),)
+	kubectl apply -f $(persistentVolumeClaimFile) --save-config
+endif
+ifneq ($(deploymentFile),)
+	kubectl apply -f $(deploymentFile) --save-config
+endif
+ifneq ($(serviceFile),)
+	kubectl apply -f $(serviceFile) --save-config
+endif
+
+###############################################
+#
+# Delete
+#
+###############################################
+delete:
+ifneq ($(persistentVolumeFile),)
 	kubectl delete pv/$(persistentVolumeName) --namespace=$(namespaceName)
-
-describe-pv:
-	kubectl describe pv/$(persistentVolumeName) --namespace=$(namespaceName)
-
-get-pv:
-	kubectl get pv/$(persistentVolumeName) --namespace=$(namespaceName)
-
-###############################################
-#
-# PersistentVolumeClaim
-#
-###############################################
-create-pvc:
-	kubectl create -f $(persistentVolumeClaimFile)
-
-delete-pvc:
+endif
+ifneq ($(persistentVolumeClaimFile),)
 	kubectl delete pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-
-describe-pvc:
-	kubectl describe pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-
-get-pvc:
-	kubectl get pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-
-###############################################
-#
-# Pods
-#
-###############################################
-deploy-pods:
-	kubectl create -f $(deploymentFile)
-
-delete-pods:
+endif
+ifneq ($(deploymentFile),)
 	kubectl delete -f $(deploymentFile) --force --grace-period=0 --namespace=$(namespaceName)
-
-exec-pod:
-	kubectl exec pods/$(POD_NAME) --namespace=$(namespaceName) -i -t -- /bin/sh
-
-get-pods:
-	kubectl get pods --namespace=$(namespaceName)
-
-get-deployments:
-	kubectl get deployments/$(deploymentName) --namespace=$(namespaceName)
+endif
+ifneq ($(serviceFile),)
+	kubectl delete service/$(serviceName) --namespace=$(namespaceName)
+endif
 
 ###############################################
 #
-# Services
+# Describe
 #
-###############################################	
-create-service:
-	kubectl create -f $(serviceFile)
-
-delete-service:
-	kubectl delete service/$(serviceName) --namespace=$(namespaceName)
-
-describe-service:
+###############################################
+describe:
+	@echo "---------------------------"
+ifneq ($(persistentVolumeFile),)
+	kubectl describe pv/$(persistentVolumeName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(persistentVolumeClaimFile),)
+	kubectl describe pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(deploymentFile),)
+	kubectl describe pods --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(serviceFile),)
 	kubectl describe service/$(serviceName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
 
-get-service:
+###############################################
+#
+# Get
+#
+###############################################
+get:
+	@echo "---------------------------"
+ifneq ($(persistentVolumeFile),)
+	kubectl get pv/$(persistentVolumeName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(persistentVolumeClaimFile),)
+	kubectl get pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(deploymentFile),)
+	kubectl get pods --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif
+ifneq ($(serviceFile),)
 	kubectl get service/$(serviceName) --namespace=$(namespaceName)
+	@echo "---------------------------"
+endif

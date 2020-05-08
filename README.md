@@ -1,3 +1,56 @@
+# Kubernetes Dashboard
+
+### Launch the Dashboard
+```
+$ kubectl proxy --address=0.0.0.0 --accept-hosts='.*'
+Starting to serve on 127.0.0.1:8001
+2020/05/07 11:55:56 http: proxy error: context canceled
+```
+
+```
+$ TOKEN=$(kubectl -n kube-system describe secret default | grep 'token:' | cut -d':' -f2 | sed 's/ //g')
+```
+
+# Kubeconfig
+
+```
+$ kubectl get serviceAccounts
+NAME      SECRETS   AGE
+default   1         42h
+```
+
+```
+$ kubectl describe serviceAccounts default
+Name:                default
+Namespace:           jenkins
+Labels:              <none>
+Annotations:         <none>
+Image pull secrets:  <none>
+Mountable secrets:   default-token-dmhng
+Tokens:              default-token-dmhng
+Events:              <none>
+```
+
+```
+$ kubectl describe secrets default-token-dmhng
+Name:         default-token-dmhng
+Namespace:    jenkins
+Labels:       <none>
+Annotations:  kubernetes.io/service-account.name: default
+              kubernetes.io/service-account.uid: a51a884c-bd08-46ef-8b0a-191182d09a1f
+
+Type:  kubernetes.io/service-account-token
+
+Data
+====
+token:      eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJqZW5raW5zIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4tZG1obmciLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImE1MWE4ODRjLWJkMDgtNDZlZi04YjBhLTE5MTE4MmQwOWExZiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpqZW5raW5zOmRlZmF1bHQifQ.eHkjhStHR09YXJZj7KAua0suQMFiK_1kSqkSPRGJ3eFbZJauADtzogkTyTGPV4158i4NHYzXoT6bnhF4eHPiUiHzylsExnLh1NE6MVoG70UC_fX0Nk2SDj6wGIn42Rlj6fay5pZtsMZ-e0vqM0LP6YhFyWHFdLmSm2Qni9ZDSs3fhCz_heZfeKvTKmZJKAqLfM29FD1iWFeD5IPrbrMY33vBQp0y37C77q9cRSgNC1tV21yvsP91KrpVb0N6Fv0ZQsQEmRLsSjptdZ_LR50HVdWBAQdwTDTnyTQFPvfSMyeR_XB34UpvdhlHE7saSUmEqudLrU0AK2HR5RPqO89Yug
+ca.crt:     1025 bytes
+namespace:  7 bytes
+```
+
+
+
+
 # Namespace
 
 ## Create the yaml file
