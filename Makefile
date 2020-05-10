@@ -1,11 +1,16 @@
 CURRENT_DIR = $(shell pwd)
 
 # Namespace
+namespaceFile=jenkins-namespace.yaml
 namespaceName=jenkins
 
 # Deployments of the pods
 deploymentFile=jenkins-deployment.yaml
 deploymentName=jenkins
+
+# Ingress
+ingressFile=jenkins-ingress.yaml
+ingressName=jenkins-ingress
 
 # PersistentVolume
 persistentVolumeFile=jenkins-pv.yaml
@@ -32,8 +37,12 @@ $(info # )
 $(info # Parameters )
 $(info # )
 $(info ############################################### )
+$(info namespaceFile: $(namespaceFile))
+$(info namespaceName: $(namespaceName))
 $(info deploymentFile: $(deploymentFile))
 $(info deploymentName: $(deploymentName))
+$(info ingressFile: $(ingressFile))
+$(info ingressName: $(ingressName))
 $(info persistentVolumeFile: $(persistentVolumeFile))
 $(info persistentVolumeName: $(persistentVolumeName))
 $(info persistentVolumeClaimFile: $(persistentVolumeClaimFile))

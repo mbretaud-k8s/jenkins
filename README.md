@@ -1,3 +1,182 @@
+# Ansible
+
+### Error "ssh: connect to host localhost port 22: Connection refused"
+```
+ansible@DESKTOP-HH72KMH:~$ ssh ansible@localhost
+ssh: connect to host localhost port 22: Connection refused
+
+ansible@DESKTOP-HH72KMH:~$ exit
+
+root@DESKTOP-HH72KMH:~# service ssh restart
+ * Restarting OpenBSD Secure Shell server sshd			[ OK ]
+root@DESKTOP-HH72KMH:~# sudo su - ansible
+
+ansible@DESKTOP-HH72KMH:~$ ssh ansible@localhost
+Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.4.0-18362-Microsoft x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Sun May 10 15:27:01 CEST 2020
+
+  System load:    0.52      Memory usage: 82%   Processes:       25
+  Usage of /home: unknown   Swap usage:   3%    Users logged in: 0
+
+  => There were exceptions while processing one or more plugins. See
+     /var/log/landscape/sysinfo.log for more information.
+
+
+  Get cloud support with Ubuntu Advantage Cloud Guest:
+    http://www.ubuntu.com/business/services/cloud
+
+15 packages can be updated.
+10 updates are security updates.
+
+
+Last login: Sun May 10 15:26:45 2020 from 127.0.0.1
+ansible@DESKTOP-HH72KMH:~$
+```
+
+# Nginx
+
+### Error: could not find tiller
+```
+$ helm version
+Client: &version.Version{SemVer:"v2.16.6", GitCommit:"dd2e5695da88625b190e6b22e9542550ab503a47", GitTreeState:"clean"}
+Error: could not find tiller
+```
+
+```
+$ kubectl -n kube-system delete deployment tiller-deploy
+deployment.extensions "tiller-deploy" delete
+$ kubectl -n kube-system delete service/tiller-deploy
+service "tiller-deploy" deleted
+$ helm init
+$HELM_HOME has been configured at /home/mathieu_bretaud/.helm.
+
+Tiller (the Helm server-side component) has been installed into your Kubernetes Cluster.
+
+Please note: by default, Tiller is deployed with an insecure 'allow unauthenticated users' policy.
+To prevent this, run `helm init` with the --tiller-tls-verify flag.
+For more information on securing your installation see: https://v2.helm.sh/docs/securing_installation/
+```
+
+```
+$ helm version
+Client: &version.Version{SemVer:"v2.16.6", GitCommit:"dd2e5695da88625b190e6b22e9542550ab503a47", GitTreeState:"clean"}
+Server: &version.Version{SemVer:"v2.16.6", GitCommit:"dd2e5695da88625b190e6b22e9542550ab503a47", GitTreeState:"clean"}
+```
+
+### Install Nginx Ingress Controller
+```
+$ helm repo add nginx-stable https://helm.nginx.com/stable
+"nginx-stable" has been added to your repositories
+```
+
+```
+$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Skip local chart repository
+...Successfully got an update from the "nginx-stable" chart repository
+```
+
+```
+$ helm install --name nginx-ingress stable/nginx-ingress --set controller.publishService.ena
+bled=true
+NAME:   nginx-ingress
+LAST DEPLOYED: Sun May 10 11:52:50 2020
+NAMESPACE: jenkins
+STATUS: DEPLOYED
+
+RESOURCES:
+==> v1/ClusterRole
+NAME           AGE
+nginx-ingress  0s
+
+==> v1/ClusterRoleBinding
+NAME           AGE
+nginx-ingress  0s
+
+==> v1/Deployment
+NAME                           READY  UP-TO-DATE  AVAILABLE  AGE
+nginx-ingress-controller       0/1    1           0          0s
+nginx-ingress-default-backend  0/1    1           0          0s
+
+==> v1/Pod(related)
+NAME                                            READY  STATUS             RESTARTS  AGE
+nginx-ingress-controller-8774b9d4c-btmsj        0/1    ContainerCreating  0         0s
+nginx-ingress-default-backend-674d599c48-kzr48  0/1    ContainerCreating  0         0s
+nginx-ingress-controller-8774b9d4c-btmsj        0/1    ContainerCreating  0         0s
+nginx-ingress-default-backend-674d599c48-kzr48  0/1    ContainerCreating  0         0s
+
+==> v1/Role
+NAME           AGE
+nginx-ingress  0s
+
+==> v1/RoleBinding
+NAME           AGE
+nginx-ingress  0s
+
+==> v1/Service
+NAME                           TYPE          CLUSTER-IP     EXTERNAL-IP  PORT(S)                     AGE
+nginx-ingress-controller       LoadBalancer  10.103.218.35  <pending>    80:30253/TCP,443:32585/TCP  0s
+nginx-ingress-default-backend  ClusterIP     10.104.44.178  <none>       80/TCP                      0s
+
+==> v1/ServiceAccount
+NAME                   SECRETS  AGE
+nginx-ingress          1        0s
+nginx-ingress-backend  1        0s
+
+
+NOTES:
+The nginx-ingress controller has been installed.
+It may take a few minutes for the LoadBalancer IP to be available.
+You can watch the status by running 'kubectl --namespace jenkins get services -o wide -w nginx-ingress-controller'
+
+An example Ingress that makes use of the controller:
+
+  apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    name: example
+    namespace: foo
+  spec:
+    rules:
+      - host: www.example.com
+        http:
+          paths:
+            - backend:
+                serviceName: exampleService
+                servicePort: 80
+              path: /
+    # This section is only required if TLS is to be enabled for the Ingress
+    tls:
+        - hosts:
+            - www.example.com
+          secretName: example-tls
+
+If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
+
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: example-tls
+    namespace: foo
+  data:
+    tls.crt: <base64 encoded cert>
+    tls.key: <base64 encoded key>
+  type: kubernetes.io/tls
+```
+
+```
+$ kubectl get services -o wide -w nginx-ingress-controller
+NAME                       TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE   SELECTOR
+nginx-ingress-controller   LoadBalancer   10.103.218.35   <pending>     80:30253/TCP,443:32585/TCP   52s   app.kubernetes.io/component=controller,app=nginx-ingress,release=nginx-ingress
+```
+
 # Kubernetes Dashboard
 
 ### Launch the Dashboard
@@ -7,8 +186,26 @@ Starting to serve on 127.0.0.1:8001
 2020/05/07 11:55:56 http: proxy error: context canceled
 ```
 
+### Add the token in the kubeconfig file for the User "docker-desktop"
 ```
-$ TOKEN=$(kubectl -n kube-system describe secret default | grep 'token:' | cut -d':' -f2 | sed 's/ //g')
+$ TOKEN=$(kubectl -n kube-system describe secret default| awk '$1=="token:"{print $2}')
+$ kubectl config set-credentials docker-desktop --token="${TOKEN}"
+User "docker-desktop" set.
+```
+
+### Check the token is present in the kubeconfig file for the User "docker-desktop"
+```
+$ kubectl config view |cut -c1-50|tail -10
+  name: docker-for-desktop
+current-context: docker-desktop
+kind: Config
+preferences: {}
+users:
+- name: docker-desktop
+  user:
+    client-certificate-data: REDACTED
+    client-key-data: REDACTED
+    token: eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3
 ```
 
 # Kubeconfig
