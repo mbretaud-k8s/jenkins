@@ -15,7 +15,18 @@
 
 POD_NAME=$(shell kubectl get pods --output='json' | jq ".items | .[] | .metadata | select(.name | startswith(\"$(deploymentName)\")) | .name" | head -1 | sed 's/"//g')
 
-default:
+all: help
+
+help:
+	@echo ""
+	@echo "-- Help Menu"
+	@echo ""
+	@echo "   1. make deploy    - create resources from files"
+	@echo "   2. make apply     - apply configurations to the resources"
+	@echo "   3. make delete    - delete resources"
+	@echo "   4. make describe  - show details of the resources"
+	@echo "   5. make get       - display one or many resources"
+	@echo ""
 
 ###############################################
 #
@@ -23,7 +34,6 @@ default:
 #
 ###############################################
 deploy:
-
 ifneq ($(namespaceFile),)
 	kubectl create -f $(namespaceFile) --save-config
 endif
