@@ -21,7 +21,7 @@ persistentVolumeClaimFile=jenkins-pvc.yaml
 persistentVolumeClaimName=jenkins-pvc
 
 # Service
-serviceFile=jenkins-service.yaml
+serviceFile=jenkins-services.yaml
 serviceName=jenkins
 
 $(info ############################################### )

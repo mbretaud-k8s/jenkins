@@ -60,22 +60,22 @@ endif
 ###############################################
 apply:
 ifneq ($(namespaceFile),)
-	kubectl apply -f $(namespaceFile) --save-config
+	kubectl apply -f $(namespaceFile)
 endif
 ifneq ($(persistentVolumeFile),)
-	kubectl apply -f $(persistentVolumeFile) --save-config
+	kubectl apply -f $(persistentVolumeFile)
 endif
 ifneq ($(persistentVolumeClaimFile),)
-	kubectl apply -f $(persistentVolumeClaimFile) --save-config
+	kubectl apply -f $(persistentVolumeClaimFile)
 endif
 ifneq ($(deploymentFile),)
-	kubectl apply -f $(deploymentFile) --save-config
+	kubectl apply -f $(deploymentFile)
 endif
 ifneq ($(serviceFile),)
-	kubectl apply -f $(serviceFile) --save-config
+	kubectl apply -f $(serviceFile)
 endif
 ifneq ($(ingressFile),)
-	kubectl apply -f $(ingressFile) --save-config
+	kubectl apply -f $(ingressFile)
 endif
 
 ###############################################
