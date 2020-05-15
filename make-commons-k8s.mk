@@ -1,21 +1,11 @@
 #
 # You need to define
-#   deploymentFile
-#   deploymentName
-#	ingressFile
-#	ingressName
-#	namespaceFile
-#	namespaceName
-#   persistentVolumeFile
-#   persistentVolumeName
-#   persistentVolumeClaimFile
-#   persistentVolumeClaimName
-#   serviceFile
-#   serviceName
 
-POD_NAME=$(shell kubectl get pods --output='json' | jq ".items | .[] | .metadata | select(.name | startswith(\"$(deploymentName)\")) | .name" | head -1 | sed 's/"//g')
+all:
 
-all: help
+KEY = $(CURRENT_DIR)/secrets/ssl/tls.key
+CERT = $(CURRENT_DIR)/secrets/ssl/tls.crt
+POD_NAME=$(shell kubectl get pods --namespace=jenkins --output='json' | jq ".items | .[] | .metadata | select(.name | startswith(\"jenkins\")) | .name" | head -1 | sed 's/"//g')
 
 help:
 	@echo ""
@@ -26,6 +16,7 @@ help:
 	@echo "   3. make delete    - delete resources"
 	@echo "   4. make describe  - show details of the resources"
 	@echo "   5. make get       - display one or many resources"
+	@echo "   6. make change	- change namespace"
 	@echo ""
 
 ###############################################
@@ -34,24 +25,23 @@ help:
 #
 ###############################################
 deploy:
-ifneq ($(namespaceFile),)
-	kubectl create -f $(namespaceFile) --save-config
-endif
-ifneq ($(persistentVolumeFile),)
-	kubectl create -f $(persistentVolumeFile) --save-config
-endif
-ifneq ($(persistentVolumeClaimFile),)
-	kubectl create -f $(persistentVolumeClaimFile) --save-config
-endif
-ifneq ($(deploymentFile),)
-	kubectl create -f $(deploymentFile) --save-config
-endif
-ifneq ($(serviceFile),)
-	kubectl create -f $(serviceFile) --save-config
-endif
-ifneq ($(ingressFile),)
-	kubectl create -f $(ingressFile) --save-config
-endif
+	kubectl create -f jenkins-namespace.yaml --save-config
+	@sleep 1
+	mkdir -p $(CURRENT_DIR)/secrets/ssl
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(KEY) -out $(CERT) -subj "/CN=nginxsvc/O=nginxsvc"
+	@sleep 1
+	kubectl create secret tls nginxsecret --namespace=jenkins --key $(KEY) --cert $(CERT) --save-config
+	@sleep 1
+	kubectl create -f jenkins-pv.yaml --save-config
+	@sleep 1
+	kubectl create -f jenkins-pvc.yaml --save-config
+	@sleep 1
+	kubectl create -f jenkins-deployment.yaml --save-config
+	@sleep 1
+	kubectl create -f jenkins-services.yaml --save-config
+	@sleep 1
+	kubectl create -f jenkins-ingress.yaml --save-config
+	@sleep 1
 
 ###############################################
 #
@@ -59,24 +49,11 @@ endif
 #
 ###############################################
 apply:
-ifneq ($(namespaceFile),)
-	kubectl apply -f $(namespaceFile)
-endif
-ifneq ($(persistentVolumeFile),)
-	kubectl apply -f $(persistentVolumeFile)
-endif
-ifneq ($(persistentVolumeClaimFile),)
-	kubectl apply -f $(persistentVolumeClaimFile)
-endif
-ifneq ($(deploymentFile),)
-	kubectl apply -f $(deploymentFile)
-endif
-ifneq ($(serviceFile),)
-	kubectl apply -f $(serviceFile)
-endif
-ifneq ($(ingressFile),)
-	kubectl apply -f $(ingressFile)
-endif
+	kubectl apply -f jenkins-pv.yaml --save-config
+	kubectl apply -f jenkins-pvc.yaml --save-config
+	kubectl apply -f jenkins-deployment.yaml --save-config
+	kubectl apply -f jenkins-services.yaml --save-config
+	kubectl apply -f jenkins-ingress.yaml --save-config
 
 ###############################################
 #
@@ -84,24 +61,14 @@ endif
 #
 ###############################################
 delete:
-ifneq ($(persistentVolumeFile),)
-	kubectl delete pv/$(persistentVolumeName) --namespace=$(namespaceName)
-endif
-ifneq ($(persistentVolumeClaimFile),)
-	kubectl delete pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-endif
-ifneq ($(deploymentFile),)
-	kubectl delete -f $(deploymentFile) --force --grace-period=0 --namespace=$(namespaceName)
-endif
-ifneq ($(serviceFile),)
-	kubectl delete service/$(serviceName) --namespace=$(namespaceName)
-endif
-ifneq ($(ingressFile),)
-	kubectl delete ing/$(ingressName) --namespace=$(namespaceName)
-endif
-ifneq ($(namespaceFile),)
-	kubectl delete -f $(namespaceFile) --namespace=$(namespaceName)
-endif
+	kubectl delete deployment.apps/jenkins --force --ignore-not-found
+	kubectl delete secret/nginxsecret --force --ignore-not-found
+	kubectl delete persistentvolumeclaim/jenkins-pvc --force --ignore-not-found
+	kubectl delete persistentvolume/jenkins-pv --force --ignore-not-found
+	kubectl delete service/jenkins --force --ignore-not-found
+	kubectl delete service/jenkins-jnlp --force --ignore-not-found
+	kubectl delete ingress.networking.k8s.io/jenkins-ingress --force --ignore-not-found
+	kubectl delete namespace/jenkins --force --ignore-not-found
 
 ###############################################
 #
@@ -110,36 +77,30 @@ endif
 ###############################################
 describe:
 	@echo "---------------------------"
-ifneq ($(persistentVolumeFile),)
-	kubectl describe pv/$(persistentVolumeName) --namespace=$(namespaceName)
+	kubectl describe namespace/jenkins --namespace=jenkins
+	@echo ""
+	
+	kubectl describe deployment.apps/jenkins --namespace=jenkins
+	@echo ""
+	
+	kubectl describe secret/nginxsecret --namespace=jenkins
+	@echo ""
+	
+	kubectl describe persistentvolumeclaim/jenkins-pvc --namespace=jenkins
+	@echo ""
+	
+	kubectl describe persistentvolume/jenkins-pv --namespace=jenkins
+	@echo ""
+	
+	kubectl describe service/jenkins --namespace=jenkins
+	@echo ""
+	
+	kubectl describe service/jenkins-jnlp --namespace=jenkins
+	@echo ""
+	
+	kubectl describe ingress.networking.k8s.io/jenkins-ingress --namespace=jenkins
 	@echo ""
 	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(persistentVolumeClaimFile),)
-	kubectl describe pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(deploymentFile),)
-	kubectl describe pods --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(serviceFile),)
-	kubectl describe service/$(serviceName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(ingressFile),)
-	kubectl describe ing/$(ingressName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
 
 ###############################################
 #
@@ -148,33 +109,43 @@ endif
 ###############################################
 get:
 	@echo "---------------------------"
-ifneq ($(persistentVolumeFile),)
-	kubectl get pv/$(persistentVolumeName) --namespace=$(namespaceName)
+	kubectl get namespace/jenkins --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get deployment.apps/jenkins --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get secret/nginxsecret --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get persistentvolumeclaim/jenkins-pvc --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get persistentvolume/jenkins-pv --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get service/jenkins --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get service/jenkins-jnlp --namespace=jenkins --ignore-not-found
+	@echo ""
+	
+	kubectl get ingress.networking.k8s.io/jenkins-ingress --namespace=jenkins --ignore-not-found
 	@echo ""
 	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(persistentVolumeClaimFile),)
-	kubectl get pvc/$(persistentVolumeClaimName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(deploymentFile),)
-	kubectl get pods --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(serviceFile),)
-	kubectl get service/$(serviceName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
-ifneq ($(ingressFile),)
-	kubectl get ing/$(ingressName) --namespace=$(namespaceName)
-	@echo ""
-	@echo "---------------------------"
-	@echo ""
-endif
+
+###############################################
+#
+# Change Namespace
+#
+###############################################
+change:
+	kubectl config set-context $(shell kubectl config current-context) --namespace=jenkins
+
+###############################################
+#
+# Get logs from the pod
+#
+###############################################
+logs:
+	kubectl logs pod/$(POD_NAME) --namespace=jenkins

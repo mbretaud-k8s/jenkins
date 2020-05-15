@@ -6,11 +6,17 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
 spec:
+  tls:
+  - hosts:
+    - jenkins.docker.internal
+    secretName: nginxsecret
   rules:
-  - host: host.docker.internal
+  - host: jenkins.docker.internal
     http:
       paths:
-      - path: /
-        backend:
+      - backend:
           serviceName: jenkins
           servicePort: 8080
+        path: /
+status:
+  loadBalancer: {}

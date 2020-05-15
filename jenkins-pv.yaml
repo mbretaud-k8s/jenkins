@@ -12,4 +12,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/m/Docker/Volumes/jenkins-master/jenkins_home"
+    path: "/c/Docker/Volumes/jenkins-master/jenkins_home"
