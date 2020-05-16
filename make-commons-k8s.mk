@@ -61,14 +61,14 @@ apply:
 #
 ###############################################
 delete:
-	kubectl delete deployment.apps/jenkins --force --ignore-not-found
-	kubectl delete secret/nginxsecret --force --ignore-not-found
-	kubectl delete persistentvolumeclaim/jenkins-pvc --force --ignore-not-found
-	kubectl delete persistentvolume/jenkins-pv --force --ignore-not-found
-	kubectl delete service/jenkins --force --ignore-not-found
-	kubectl delete service/jenkins-jnlp --force --ignore-not-found
-	kubectl delete ingress.networking.k8s.io/jenkins-ingress --force --ignore-not-found
-	kubectl delete namespace/jenkins --force --ignore-not-found
+	kubectl delete deployment.apps/jenkins --namespace=jenkins --force --ignore-not-found
+	kubectl delete secret/nginxsecret --namespace=jenkins --force --ignore-not-found
+	kubectl delete persistentvolumeclaim/jenkins-pvc --namespace=jenkins --force --ignore-not-found
+	kubectl delete persistentvolume/jenkins-pv --namespace=jenkins --force --ignore-not-found
+	kubectl delete service/jenkins --namespace=jenkins --force --ignore-not-found
+	kubectl delete service/jenkins-jnlp --namespace=jenkins --force --ignore-not-found
+	kubectl delete ingress.networking.k8s.io/jenkins-ingress --namespace=jenkins --force --ignore-not-found
+	kubectl delete namespace/jenkins --namespace=jenkins --force --ignore-not-found
 
 ###############################################
 #
